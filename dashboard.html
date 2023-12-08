@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 5px;
+      text-align: center;
+      border-bottom: 2px solid #0056b3;
+      border-radius: 10px 10px 10px 10px;
+    }
+
+    nav {
+      background-color: #f8f9fa;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    nav ul {
+      list-style-type: none;
+      margin: 10;
+      padding: 10;
+      display: flex;
+      justify-content: center;
+      background-color: #f8f9fa;
+    }
+
+    nav li {
+      margin-right: 25px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+      font-size: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+      position: relative;
+    }
+
+    nav a:hover {
+      background-color: #0056b3;
+      color: white;
+    }
+
+    .file-link {
+      display: block;
+      margin: 10px 0;
+      padding: 15px;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+      font-size: 18px;
+      transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    }
+
+    .file-link:hover {
+      background-color: #0056b3;
+      color: white;
+    }
+
+    section {
+      margin: 0;
+      font-size: 20;
+      padding: 12px;
+      text-align: center;
+      flex: 0;
+    }
+
+    footer {
+      background-color: #007bff;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>ADMIN DASHBOARD</h1>
+  </header>
+
+ <section>
+    <h2>Welcome to the Admin Dashboard of a demo SSH server honeypot.</h2>
+    <p>This serves as a simple web interface presented to a potential hacker. The login credentials for this page differ from those used by administrators and users on the real server. The website and admin interface act as a decoy for the hacker, displaying deceptive (fake) data (represented by these files). The intention is to mislead the attacker into believing that the data holds value for the server and site. However, the information is entirely fabricated and mimics the format of the data found on the real server or site. This is the simplest implementation of a Honeypot on a web application.</p>
+  </section>
+
+  <nav>
+    <ul>
+      <li><a href="https://download.virtualbox.org/virtualbox/7.0.12/VirtualBox-7.0.12-159484-Win.exe" class="file-link" title="Details about Virtualbox-(V-7.0.12)-Win">Virtualbox-(V-7.0.12)</a></li>
+      <li><a href="https://webwerks.dl.sourceforge.net/project/osboxes/v/vb/25-Kl-l-x/2023.3/64bit.7z" class="file-link" title="Details about Kali-Linux-Virtualbox-VM">Kali-Linux-Virtualbox-VM</a></li>
+      <li><a href="https://webwerks.dl.sourceforge.net/project/osboxes/v/vb/55-U-u/23.10/64bit.7z" class="file-link" title="Details about Ubuntu-Linux-Virtualbox-VM">Ubuntu-(V-2023.04)-Virtualbox-VM</a></li>
+      <li><a href="https://download3.vmware.com/software/WKST-1750-WIN/VMware-workstation-full-17.5.0-22583795.exe" class="file-link" title="Details about VMWare-Workstation-(V-17.5.0)">VMWare-Workstation-(V-17.5.0)</a></li>
+      <li><a href="https://webwerks.dl.sourceforge.net/project/metasploitable/Metasploitable2/metasploitable-linux-2.0.0.zip" class="file-link" title="Details about Metasploitable-2-VMWare">Metasploitable-2-VMWare</a></li>
+    </ul>
+    <ul>
+      <li><a href="https://dl.filehorse.com/win/developer-tools/dev-c/DEV-C-6.30.exe?st=PdZEjr0PBUpzVr61iyqtWg&e=1701540791&fn=Embarcadero_Dev-Cpp_6.3_TDM-GCC_9.2_Setup.exe" class="file-link" title="Details about DevC++-(V-6.30)-Setup">DevC++-(V-6.30)-Setup</a></li>
+      <li><a href="https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS2022&source=VSLandingPage&cid=2030:db126042563d46b88f7027e970f12b6d" class="file-link" title="Details about Visual-Studio-2022-Community">Visual-Studio-2022-Community</a></li>
+      <li><a href="https://dl2.filehorse.com/win/file-transfer-and-networking/cisco-packet-tracer-64/PacketTracer-7.3.0-win64-setup.exe?st=xXiPT3ukJtlcDa_07rUaMw&e=1701594968&fn=PacketTracer-7.3.0-win64-setup.exe" class="file-link" title="Details about Cisco-Packet-Tracer-(V-7.3.0)-64bit-Win">Cisco-Packet-Tracer-(V-7.3.0)</a></li>
+      <li><a href="https://getintopc20.xyz/2022/OfficeTools/Microsoft_office_2021_Pro_Plus.rar" class="file-link" title="Details about MS-Office-2021-(64bit-Crack)">MS-Office-2021-(64bit-Crack)</a></li>
+      <li><a href="https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe" class="file-link" title="Details about Python-(V-3.12.0)-64bit">Python-(V-3.12.0)-64bit</a></li>
+    </ul>
+    <ul>
+      <li><a href="https://ia903405.us.archive.org/26/items/win-10-pro/Win10Pro.iso" class="file-link" title="Details about Windows-10-Pro-(21H2-ISO-File)">Windows-10-Pro-(21H2-ISO-File)</a></li>
+      <li><a href="https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7BBCBE0CB0-0515-9618-6AAB-F0BD7C1F1307%7D%26lang%3Den-GB%26browser%3D4%26usagestats%3D1%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3Dx64-stable-statsdef_1%26installdataindex%3Dempty/update2/installers/ChromeSetup.exe" class="file-link" title="Details about Google-Chrome-Setup">Google-Chrome-Setup</a></li>
+      <li><a href="https://141-95-126-180.xyz/Getintopc.com/Adobe_Premiere_Pro_v23.2.0.69.rar?md5=3DxyiPyvKSN2s8nVe8K3Yg&expires=1704099982" class="file-link" title="Details about Adobe-Premeire-Pro-2023-(Crack-Password=123)">Adobe-Premeire-Pro-2023-(Crack-Password=123)</a></li>
+      <li><a href="https://cdn.zoom.us/prod/5.16.10.26186/x64/ZoomInstallerFull.exe" class="file-link" title="Details about Zoom-Desktop-Client-Installer-(V-5.10)">Zoom-Desktop-Client-Installer-(V-5.10)</a></li>
+    </ul>
+  </nav>
+
+  <footer>
+    <p>&copy; 2023 Newbies. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
