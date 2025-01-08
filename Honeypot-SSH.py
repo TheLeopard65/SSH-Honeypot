@@ -1,9 +1,19 @@
 import paramiko
 import socket
 import threading
-from flask import Flask, render_template, request, redirect, url_for
+import logging
+import os
+from datetime import datetime
 
-app = Flask(__name__)
+today = datetime.today().strftime('%Y-%m-%d')
+log_filename = f"HONEYPOT-{today}.log"
+logging.basicConfig(filename=log_filename, level=logging.INFO, format="%(asctime)s - %(message)s")
+
+def generate_key():
+    if not os.path.exists('key'):
+        key = paramiko.RSAKey.generate(2048)
+        key.write_private_key_file('key')
+        print("[#] RSA Key Generated and Saved to 'key'")
 
 class SSHServer(paramiko.ServerInterface):
     def __init__(self, client_address):
@@ -12,11 +22,10 @@ class SSHServer(paramiko.ServerInterface):
 
     def check_auth_password(self, username: str, password: str) -> int:
         client_ip = self.client_address[0]
-        message = f"Authentication Attempt by: User {username} : Password: {password} from IP: {client_ip}"
+        message = f"[!] AUTHENTICATION ATTEMPT BY USER : {username}:{password} FROM THE IP : {client_ip} !!!"
+        logging.info(message)
         print(message)
-        with open('honeypot.log', 'a') as log_file:
-            log_file.write(message + '\n')
-        if username == "Kali7986" and password == "KaliLinux7986450@?!":
+        if username == "kali" and password == "Kali123":
             return paramiko.AUTH_SUCCESSFUL
         else:
             return paramiko.AUTH_FAILED
@@ -27,10 +36,8 @@ def handle_connection(client_sock):
         transport = paramiko.Transport(client_sock)
         server_key = paramiko.RSAKey(filename='key')
         transport.add_server_key(server_key)
-
         ssh = SSHServer(client_sock.getpeername())
         transport.start_server(server=ssh)
-
         transport.join()
     except Exception as e:
         print(f"Exception in handle_connection: {e}")
@@ -38,63 +45,31 @@ def handle_connection(client_sock):
         print("Connection handling completed.")
 
 def start_honeypot(host, port):
-    print(f'Starting honeypot on port {port}!')
+    print(f'[#] STARTING HONEY-POT ON PORT : {port} !!!')
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_sock.bind((host, port))
     server_sock.listen(223)
-
     while True:
         try:
             client_sock, client_addr = server_sock.accept()
-            print(f"Connection from {client_addr[0]}:{client_addr[1]}")
+            print(f"[!] CONNECTION RECEIVED FROM {client_addr[0]}:{client_addr[1]} !!!")
             t = threading.Thread(target=handle_connection, args=(client_sock,))
             t.start()
         except KeyboardInterrupt:
-            print("Received KeyboardInterrupt. Shutting down the honeypot.")
+            print("[#] SHUTTING DOWN HONEYPOT -> RECEIVED KEYBOARD-INTERRUPT !!!")
             break
-
-@app.route('/')
-def index():
-    return redirect(url_for('login'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        message = f"Authentication Attempt by: User {username} : Password: {password} from IP: {request.remote_addr}"
-        print(message)
-        with open('honeypot.log', 'a') as log_file:
-            log_file.write(message + '\n')
-        return redirect(url_for('authenticate', username=username, password=password))
-    return render_template('login.html')
-
-@app.route('/authenticate', methods=['POST'])
-def authenticate():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    message = f"Authentication Attempt by: User {username} : Password: {password} from IP: {request.remote_addr}"
-    print(message)
-    with open('honeypot.log', 'a') as log_file:
-        log_file.write(message + '\n')
-
-    if username == "Kali7986" and password == "KaliLinux7986450@?!":
-        return render_template('dashboard.html', username=username)
-    else:
-        return render_template('authenticate.html')
-
-def run_flask():
-    app.run(host='0.0.0.0', port=80, debug=False, threaded=True)
+        except Exception as e:
+            print(f"Error while accepting a new connection: {e}")
 
 def main():
-    honeypot_thread = threading.Thread(target=start_honeypot, args=('localhost', 8080))
+    generate_key()
+    honeypot_thread = threading.Thread(target=start_honeypot, args=('0.0.0.0', 2222))
     honeypot_thread.start()
-
     try:
-        run_flask()
+        honeypot_thread.join()
     except KeyboardInterrupt:
-        print("Received KeyboardInterrupt. Exiting...")
+        print("[@] EXITING SIMULATION -> RECEIVED KEYBOARD-INTERRUPT !!!")
         honeypot_thread.join()
 
 if __name__ == '__main__':
