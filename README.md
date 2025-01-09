@@ -1,47 +1,64 @@
-# SSH Server Basic Honeypot: Introduction to Cybersecurity LAB Project (First Semester 2023)
+# Basic SSH-Honeypot: Introduction to Cybersecurity LAB Project (1st Semester 2023)
 
-## Overview
+This repository contains a simple SSH honeypot implementation written in Python. The purpose of this honeypot is to simulate an SSH service that logs and handles authentication attempts and connection activities. It is designed to capture information about brute force attacks, username/password combinations used, and other malicious activities.
 
-This Python project serves as an introductory exploration into the realm of cybersecurity by implementing a basic honeypot system. The focus is on logging SSH and web login attempts, offering insights into potential security threats. The code is designed as an educational example to illustrate the detection and logging of unauthorized access, enhancing understanding of cybersecurity concepts.
+## Features
 
-## Project Components
+- **SSH Authentication Simulation:** The honeypot logs all SSH authentication attempts, including failed and successful login attempts.
+- **SSH Session Simulation:** Once a successful authentication occurs, a fake shell is started, allowing attackers to interact with it.
+- **Logging:** Logs of authentication attempts and session interactions are stored in a log file with the date included in the filename for easy tracking.
+- **Customizable:** You can adjust the host, port, and SSH key handling as required.
 
-### SSH Honeypot
+## Setup
 
-The SSH honeypot component utilizes Paramiko to create an SSH server that logs authentication attempts. It scrutinizes provided usernames and passwords, logging details of each attempt into a file named 'honeypot.log'. Successful authentication is determined by matching the credentials against a predefined set ("Kali7986" and "KaliLinux7986450@?!").
+1. **Install Dependencies:**  
+   Ensure you have the necessary Python dependencies installed. You can use the following command to install Paramiko:
 
-### Web Interface (Flask)
+   ```bash
+   pip install paramiko
+   ```
 
-The project incorporates a [Flask](https://flask.palletsprojects.com/) web framework to provide a user-friendly interface. A simple web page with a login form captures user credentials. Similar to the SSH honeypot, unsuccessful login attempts are logged, and if the provided credentials match the predefined set, the user is redirected to a dashboard; otherwise, an authentication failure page is displayed.
+2. **Generate SSH Key:**  
+   The first time the honeypot is run, it will generate an RSA key pair for SSH connections if one does not already exist. The key will be saved as `HONEYPOT-KEY` in the root directory.
 
-### Concurrent Execution
+3. **Running the Honeypot:**  
+   To start the SSH honeypot, simply run the script:
 
-Both the SSH honeypot and the Flask web server run concurrently in separate threads. The Flask server operates on port 80, while the SSH honeypot runs on port 8080.
+   ```bash
+   python SSH-HONEYPOT.py
+   ```
 
-## Detailed Explanation
+   The honeypot will listen on all network interfaces (`0.0.0.0`) and port `2222` by default. You can change these values in the `start_honeypot` function.
 
-### SSH Honeypot (SSHServer Class)
+4. **Log Files:**  
+   All connection attempts are logged to a file named `HONEYPOT-LOGS-YYYY-MM-DD.log` (e.g., `HONEYPOT-LOGS-2025-01-09.log`).
 
-The SSHServer class, extending `paramiko.ServerInterface`, manages SSH authentication. It overrides the `check_auth_password` method to log attempts and accept or reject based on predefined credentials. The `handle_connection` function sets up an SSH server on a separate thread for each incoming connection using `paramiko.Transport`, logging attempts to 'honeypot.log'.
+## How It Works
 
-### Flask Web Interface
+- **SSH Key Generation:**  
+  A 2048-bit RSA key is generated and saved to the `HONEYPOT-KEY` file if not already present.
+  
+- **Server Interface:**  
+  The `SSHServer` class defines the behavior of the honeypot SSH server, handling authentication attempts and session management. If a user successfully logs in with the username "kali" and password "kali", a fake shell is spawned.
+  
+- **Connection Handling:**  
+  The honeypot listens for incoming SSH connections on the specified host and port, spawning a new thread to handle each connection.
 
-The Flask web app has three routes: '/', '/login', and '/authenticate'. The former redirects to the login page, the second handles the login form, and the latter manages authentication. Form data is logged, and successful logins redirect to the dashboard.
+- **Logging:**  
+  Every authentication attempt, along with the username, password, and IP address of the client, is logged to a date-specific file. The logs help track malicious activities and identify potential attack patterns.
 
-### Running the Application
+## Files
 
-The `start_honeypot` function initiates a socket to listen for connections on port 8080, creating a new thread for each connection. The `run_flask` function runs the Flask server in the main thread on port 80. The main function starts the SSH honeypot in a separate thread.
+- `SSH-HONEYPOT.py`: The main script that runs the honeypot server.
+- `HONEYPOT-KEY`: The RSA private key used for SSH authentication.
+- `LICENSE`: The license file for the project.
+- `README.md`: This file, containing information about the project.
 
-### Interrupt Handling
+## License
 
-The application gracefully handles a `KeyboardInterrupt`, printing a message and waiting for the SSH honeypot thread to finish before exiting.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Execution
+## Disclaimer
 
-To run the application, execute the script in VScode or Python IDLE. It opens a new terminal indicating the honeypot has started on port 8080. The live site captures credentials and IP addresses when login attempts are made.
+This honeypot is for educational and research purposes only. It should not be used in a production environment or for malicious activities. Always ensure you comply with applicable laws when setting up and using honeypots.
 
-## How to Use
-
-1. **Start the Code:** Run the script in VScode or Python IDLE.
-2. **Access Honeypot:** The terminal will indicate the honeypot's initiation on port 8080 (you can modify the port in the code).
-3. **Live Monitoring:** The site is live, capturing credentials and IP addresses upon login attempts. Note: Careful consideration of legal and ethical aspects is crucial when deploying honeypots in real-world scenarios.
