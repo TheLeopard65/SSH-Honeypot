@@ -10,6 +10,10 @@ today = datetime.today().strftime('%Y-%m-%d')
 log_filename = f"HONEYPOT-LOGS-{today}.log"
 logging.basicConfig(filename=log_filename, level=logging.INFO, format="%(asctime)s - %(message)s")
 
+IP_ADDRESS = '0.0.0.0'
+SSH_PORT = 2222
+VALID_USERS = { "kali": "kali", "admin": "password123", "root": "toor", "user1": "pass1", "guest": "guest123", }
+
 def generate_key():
     if not os.path.exists('HONEYPOT-KEY'):
         key = paramiko.RSAKey.generate(2048)
@@ -22,39 +26,36 @@ class SSHServer(paramiko.ServerInterface):
 
     def check_auth_password(self, username: str, password: str) -> int:
         client_ip = self.client_address[0]
-        message = f"[!] AUTHENTICATION ATTEMPT BY USER: {username}:{password} FROM IP: {client_ip} !!!"
-        logging.info(message)
-        print(message)
-        if username == "kali" and password == "kali": return paramiko.AUTH_SUCCESSFUL
-        else: return paramiko.AUTH_FAILED
+        if username in VALID_USERS and VALID_USERS[username] == password:
+	        logging.info(f"[!] SUCCESSFULL AUTHENTICATION ATTEMPT BY USER: {username}:{password} FROM IP: {client_ip} !!!")
+	        print(f"[!] SUCCESSFULL AUTHENTICATION ATTEMPT BY USER: {username}:{password} FROM IP: {client_ip} !!!")
+        	return paramiko.AUTH_SUCCESSFUL
+        else:
+	        logging.info(f"[!] FAILED AUTHENTICATION ATTEMPT BY USER: {username}:{password} FROM IP: {client_ip} !!!")
+	        print(f"[!] FAILED AUTHENTICATION ATTEMPT BY USER: {username}:{password} FROM IP: {client_ip} !!!")
+        	return paramiko.AUTH_FAILED
 
     def get_allowed_auths(self, username): return 'password'
 
     def check_channel_request(self, channel_type, chanid):
-        if channel_type == 'session': return paramiko.OPEN_SUCCEEDED
-        elif channel_type == 'pty': return paramiko.OPEN_SUCCEEDED
+        if channel_type in ['session', 'pty']: return paramiko.OPEN_SUCCEEDED
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
     def start_shell(self, channel):
         try:
-            channel.send("[#] WELCOME TO THE SSH HONEYPOT SIMULATION!\n")
-            process = subprocess.Popen(['/bin/sh'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
+            channel.get_pty()
+            channel.send("[#] WELCOME TO THE SSH HONEYPOT! YOU ARE NOW IN A R-SHELL!\n")
+            channel.invoke_shell()
             while True:
-                data = channel.recv(1024)
-                if len(data) == 0: break
-                process.stdin.write(data.decode())
-                process.stdin.flush()
-                output = process.stdout.read(1024)
-                if len(output) > 0: channel.send(output)
-                error = process.stderr.read(1024)
-                if len(error) > 0: channel.send(error)
-            process.stdin.close()
-            process.stdout.close()
-            process.stderr.close()
+                if channel.exit_status_ready(): break
+                else: pass
         except Exception as e:
-            print(f"[@] ERROR (COULDN'T START SHELL): {e}")
+            logging.error(f"[@] ERROR (COULDN'T START REAL SHELL): {e}")
+            channel.send(f"[@] ERROR (COULDN'T START REAL SHELL): {e}\n")
+            print(f"[@] ERROR (COULDN'T START REAL SHELL): {e}\n")
+        finally: channel.close()
 
-def handle_connection(client_sock):
+def handle_connection(client_sock, client_addr):
     try:
         client_ip = client_sock.getpeername()[0]
         transport = paramiko.Transport(client_sock)
@@ -63,13 +64,21 @@ def handle_connection(client_sock):
         ssh = SSHServer(client_sock.getpeername())
         transport.start_server(server=ssh)
         channel = transport.accept(15)
-        if channel is None: return
+        if channel is None:
+        	logging.error("[@] ERROR (CHHANEL IS NONE) : Connection may have Failed !!!")
+        	print("[@] ERROR (CHHANEL IS NONE) : Connection may have Failed !!!")
+        	return
         ssh.start_shell(channel)
-    except Exception as e: print(f"[@] ERROR (EXCEPTION IN HANDLE-CONNECTION FUNCTION) : {e}")
-    finally: pass
+    except Exception as e:
+        logging.error(f"[@] ERROR (EXCEPTION IN HANDLE-CONNECTION FUNCTION): {e}")
+        print(f"[@] ERROR (EXCEPTION IN HANDLE-CONNECTION FUNCTION): {e}")
+    finally:
+    	if transport: transport.close()
+    	client_sock.close()
 
-def start_honeypot(host, port):
+def start_server(host, port):
     print(f'[#] STARTING SSH HONEYPOT ON PORT : {port} !!!')
+    logging.info(f'[#] STARTING SSH HONEYPOT ON PORT : {port} !!!')
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_sock.bind((host, port))
@@ -78,17 +87,20 @@ def start_honeypot(host, port):
         try:
             client_sock, client_addr = server_sock.accept()
             print(f"[#] CONNECTION RECEIVED FROM : ({client_addr[0]}:{client_addr[1]}) !!!")
-            t = threading.Thread(target=handle_connection, args=(client_sock,))
-            t.start()
+            logging.info(f"[#] CONNECTION RECEIVED FROM : ({client_addr[0]}:{client_addr[1]}) !!!")
+            client_thread = threading.Thread(target=handle_connection, args=(client_sock, client_addr))
+            client_thread.start()
         except KeyboardInterrupt:
             print("[#] SHUTTING DOWN HONEYPOT -> RECEIVED KEYBOARD-INTERRUPT !!!")
+            logging.info("[#] SHUTTING DOWN HONEYPOT -> RECEIVED KEYBOARD-INTERRUPT !!!")
             break
         except Exception as e:
             print(f"[@] ERROR (COULD ACCEPT CONNECTION) : {e}")
+            logging.error(f"[@] ERROR (COULD ACCEPT CONNECTION) : {e}")
 
 def main():
     generate_key()
-    honeypot_thread = threading.Thread(target=start_honeypot, args=('0.0.0.0', 2222))
+    honeypot_thread = threading.Thread(target=start_server, args=(IP_ADDRESS, SSH_PORT))
     honeypot_thread.start()
     try: honeypot_thread.join()
     except KeyboardInterrupt: honeypot_thread.join()
