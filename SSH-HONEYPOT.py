@@ -1,8 +1,8 @@
 import paramiko
 import socket
-import threading
 import logging
 import os
+import threading
 import subprocess
 from datetime import datetime
 
@@ -36,9 +36,11 @@ class SSHServer(paramiko.ServerInterface):
         	return paramiko.AUTH_FAILED
 
     def get_allowed_auths(self, username): return 'password'
+    def check_channel_pty_request( self, channel, term, width, height, pixelwidth, pixelheight, modes ): return True
+    def check_channel_shell_request( self, channel ): return True
 
     def check_channel_request(self, channel_type, chanid):
-        if channel_type in ['session', 'pty']: return paramiko.OPEN_SUCCEEDED
+        if channel_type in ['session', 'pty', 'shell']: return paramiko.OPEN_SUCCEEDED
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
     def start_shell(self, channel):
@@ -46,14 +48,11 @@ class SSHServer(paramiko.ServerInterface):
             channel.get_pty()
             channel.send("[#] WELCOME TO THE SSH HONEYPOT! YOU ARE NOW IN A R-SHELL!\n")
             channel.invoke_shell()
-            while True:
-                if channel.exit_status_ready(): break
-                else: pass
-        except Exception as e:
-            logging.error(f"[@] ERROR (COULDN'T START REAL SHELL): {e}")
-            channel.send(f"[@] ERROR (COULDN'T START REAL SHELL): {e}\n")
-            print(f"[@] ERROR (COULDN'T START REAL SHELL): {e}\n")
-        finally: channel.close()
+        except Exception as error:
+            logging.error(f"[@] ERROR (COULDN'T START REAL SHELL): {error}")
+            channel.send(f"[@] ERROR (COULDN'T START REAL SHELL): {error}\n")
+        finally:
+            channel.close()
 
 def handle_connection(client_sock, client_addr):
     try:
@@ -69,11 +68,11 @@ def handle_connection(client_sock, client_addr):
         	print("[@] ERROR (CHHANEL IS NONE) : Connection may have Failed !!!")
         	return
         ssh.start_shell(channel)
-    except Exception as e:
-        logging.error(f"[@] ERROR (EXCEPTION IN HANDLE-CONNECTION FUNCTION): {e}")
-        print(f"[@] ERROR (EXCEPTION IN HANDLE-CONNECTION FUNCTION): {e}")
+    except Exception as error:
+        logging.error(f"[@] ERROR (EXCEPTION IN HANDLE-CONNECTION FUNCTION): {error}")
+        print(f"[@] ERROR (EXCEPTION IN HANDLE-CONNECTION FUNCTION): {error}")
     finally:
-    	if transport: transport.close()
+    	if transport and transport.is_active(): transport.close()
     	client_sock.close()
 
 def start_server(host, port):
@@ -94,16 +93,17 @@ def start_server(host, port):
             print("[#] SHUTTING DOWN HONEYPOT -> RECEIVED KEYBOARD-INTERRUPT !!!")
             logging.info("[#] SHUTTING DOWN HONEYPOT -> RECEIVED KEYBOARD-INTERRUPT !!!")
             break
-        except Exception as e:
-            print(f"[@] ERROR (COULD ACCEPT CONNECTION) : {e}")
-            logging.error(f"[@] ERROR (COULD ACCEPT CONNECTION) : {e}")
+        except Exception as error:
+            print(f"[@] ERROR (COULD ACCEPT CONNECTION) : {error}")
+            logging.error(f"[@] ERROR (COULD ACCEPT CONNECTION) : {error}")
 
 def main():
-    generate_key()
-    honeypot_thread = threading.Thread(target=start_server, args=(IP_ADDRESS, SSH_PORT))
-    honeypot_thread.start()
-    try: honeypot_thread.join()
-    except KeyboardInterrupt: honeypot_thread.join()
+    try:
+        generate_key()
+        start_server(IP_ADDRESS, SSH_PORT)
+    except Exception as error:
+        logging.error(f"[@] ERROR (COULDN'T START SERVER) : {error}")
+        print(f"[@] ERROR (COULDN'T START SERVER) : {error}")
 
 if __name__ == '__main__':
     main()
