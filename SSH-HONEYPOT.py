@@ -59,12 +59,21 @@ class SSHServer(paramiko.ServerInterface):
                     channel.send(char)
                 command = command.strip()
                 if (command == 'exit') or (command == '^C'): break
+                logging.info(f"[$] COMMAND \"{command}\" IS TO BE EXECUTED UNDER R-BASH SHELL")
+                print(f"[$] COMMAND \"{command}\" IS TO BE EXECUTED UNDER R-BASH SHELL")
                 try:
                     process = subprocess.Popen(['/bin/rbash', '-c', command], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     stdout, stderr = process.communicate()
-                    if stdout: channel.send(f"\r\n{stdout.decode()}")
-                    if stderr: channel.send(f"\r\n{stderr.decode()}")
-                    if not stdout and not stderr: channel.send(f"\r\nERROR#: COMMAND {command} DID NOT PRODUCE ANY OUTPUT OR WAS INVALID !!!\n")
+                    if stdout:
+                        channel.send(f"\r\n{stdout.decode()}")
+                        logging.info(f"COMMAND SUCCESSFULL: {stdout.decode()}")
+                    if stderr:
+                        channel.send(f"\r\n{stderr.decode()}")
+                        logging.error(f"COMMAND FAILED: {stderr.decode()}")
+                    if not stdout and not stderr:
+                        channel.send(f"\r\nERROR#: COMMAND {command} DID NOT PRODUCE ANY OUTPUT OR WAS INVALID !!!\n")
+                        logging.error(f"ERROR#: COMMAND {command} DID NOT PRODUCE ANY OUTPUT OR WAS INVALID !!!")
+                        print(f"ERROR#: COMMAND {command} DID NOT PRODUCE ANY OUTPUT OR WAS INVALID !!!")
                 except Exception as error:
                     channel.send(f"\r\nERROR#: Exception occurred while executing command: {str(error)}\n")
         except Exception as error:
